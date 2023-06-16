@@ -19,13 +19,3 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.schedules
     OWNER to robertpatton;
-
--- Trigger: set_uuid_trigger
-
--- DROP TRIGGER IF EXISTS set_uuid_trigger ON public.schedules;
-
-CREATE TRIGGER set_uuid_trigger
-    BEFORE INSERT
-    ON public.schedules
-    FOR EACH ROW
-    EXECUTE FUNCTION public.set_uuid_field();
