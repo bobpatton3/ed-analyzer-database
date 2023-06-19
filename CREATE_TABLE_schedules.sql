@@ -12,7 +12,13 @@ CREATE TABLE IF NOT EXISTS public.schedules
     client_group character varying(255) COLLATE pg_catalog."default",
     facility character varying(255) COLLATE pg_catalog."default",
     department character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT schedules_pkey PRIMARY KEY (id)
+    department_id uuid NOT NULL,
+    CONSTRAINT schedules_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_schedules_departments FOREIGN KEY (department_id)
+        REFERENCES public.departments (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
 )
 
 TABLESPACE pg_default;

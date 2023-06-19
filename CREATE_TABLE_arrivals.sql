@@ -12,7 +12,13 @@ CREATE TABLE IF NOT EXISTS public.arrivals
     cpt character varying(100) COLLATE pg_catalog."default",
     age integer,
     id uuid NOT NULL,
-    CONSTRAINT arrivals_pkey PRIMARY KEY (id)
+    department_id uuid NOT NULL,
+    CONSTRAINT arrivals_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_arrivals_department FOREIGN KEY (department_id)
+        REFERENCES public.departments (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
 )
 
 TABLESPACE pg_default;

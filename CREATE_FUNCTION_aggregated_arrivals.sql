@@ -1,14 +1,12 @@
--- FUNCTION: public.aggregated_arrivals(character varying, character varying, character varying, character varying, character varying, character varying)
+-- FUNCTION: public.aggregated_arrivals(character varying, character varying, character varying, uuid)
 
--- DROP FUNCTION IF EXISTS public.aggregated_arrivals(character varying, character varying, character varying, character varying, character varying, character varying);
+-- DROP FUNCTION IF EXISTS public.aggregated_arrivals(character varying, character varying, character varying, uuid);
 
 CREATE OR REPLACE FUNCTION public.aggregated_arrivals(
 	_start_date character varying,
 	_end_date character varying,
 	_door_to_prov character varying,
-	_client character varying,
-	_fac character varying,
-	_dept character varying)
+	_dept_id uuid)
     RETURNS TABLE(id integer, dow integer, hod integer, all_avg_rvus numeric, l5cc_avg_rvus numeric) 
     LANGUAGE 'plpgsql'
     COST 100
@@ -30,9 +28,7 @@ WITH selected_adjusted_arrivals AS
 (
 SELECT rvus, cpt, arrival_datetime + door_to_prov AS provider_ready_time
 FROM arrivals 
-WHERE client_group = _client 
-AND facility = _fac
-AND department = _dept
+WHERE department_id = _dept_id
 AND (arrival_datetime + door_to_prov) BETWEEN start_date AND end_date
 ),
 all_arrivals_aggregated AS
@@ -66,5 +62,5 @@ END
 
 $BODY$;
 
-ALTER FUNCTION public.aggregated_arrivals(character varying, character varying, character varying, character varying, character varying, character varying)
+ALTER FUNCTION public.aggregated_arrivals(character varying, character varying, character varying, uuid)
     OWNER TO robertpatton;
