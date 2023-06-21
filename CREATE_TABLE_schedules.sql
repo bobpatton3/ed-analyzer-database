@@ -9,9 +9,6 @@ CREATE TABLE IF NOT EXISTS public.schedules
     update_date date,
     owner character varying(31) COLLATE pg_catalog."default" NOT NULL,
     schedule_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    client_group character varying(255) COLLATE pg_catalog."default",
-    facility character varying(255) COLLATE pg_catalog."default",
-    department character varying(255) COLLATE pg_catalog."default",
     department_id uuid NOT NULL,
     CONSTRAINT schedules_pkey PRIMARY KEY (id),
     CONSTRAINT fk_schedules_departments FOREIGN KEY (department_id)

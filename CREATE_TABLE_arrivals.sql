@@ -4,9 +4,6 @@
 
 CREATE TABLE IF NOT EXISTS public.arrivals
 (
-    client_group character varying(255) COLLATE pg_catalog."default",
-    facility character varying(255) COLLATE pg_catalog."default",
-    department character varying(255) COLLATE pg_catalog."default",
     arrival_datetime timestamp without time zone,
     rvus numeric(6,2),
     cpt character varying(100) COLLATE pg_catalog."default",
