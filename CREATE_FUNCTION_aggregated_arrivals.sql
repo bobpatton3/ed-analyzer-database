@@ -54,9 +54,9 @@ SELECT (aa.dow * 100 + aa.hod)::integer AS "id",
     aa.dow::integer,
     aa.hod::integer,
     aa.avgrvus AS all_avg_rvus,
-    la.avgrvus AS l5cc_avg_rvus
+    COALESCE(la.avgrvus, 0.0) AS l5cc_avg_rvus
    FROM all_arrivals_aggregated aa
-     JOIN level5_cc_aggregated la ON la.dow = aa.dow AND la.hod = aa.hod;
+     LEFT JOIN level5_cc_aggregated la ON la.dow = aa.dow AND la.hod = aa.hod;
 
 END
 
