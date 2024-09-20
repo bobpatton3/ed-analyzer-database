@@ -1,10 +1,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS plpython3u;
 
 -------------------------------------------------------------
 
 -- FUNCTION: public.set_uuid_field()
 
-CREATE FUNCTION IF NOT EXISTS public.set_uuid_field()
+CREATE OR REPLACE FUNCTION public.set_uuid_field()
     RETURNS trigger
     LANGUAGE 'plpgsql'
     COST 100
@@ -36,7 +37,15 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.client_groups
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
 
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.client_groups
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
+	
 -------------------------------------------------------------
 
 -- Table: public.facilities
@@ -59,7 +68,14 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.facilities
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
 
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.facilities
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
 -------------------------------------------------------------
 
 -- Table: public.departments
@@ -82,9 +98,16 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.departments
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
 
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.departments
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
+	
 -------------------------------------------------------------
-
 
 -- Table: public.department_configuration
 
@@ -106,6 +129,14 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.department_configuration
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
+
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.department_configuration
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
 
 -------------------------------------------------------------
 
@@ -124,6 +155,14 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.users
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
+
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
 
 -------------------------------------------------------------
 
@@ -151,7 +190,15 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.user_department_auth
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
 
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.user_department_auth
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
+	
 -------------------------------------------------------------
 
 -- Table: public.schedules
@@ -177,7 +224,15 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.schedules
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
 
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.schedules
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
+	
 -------------------------------------------------------------
 
 -- Table: public.shifts
@@ -202,7 +257,15 @@ TABLESPACE pg_default;
 ALTER TABLE IF EXISTS public.shifts
     OWNER to robertpatton;
 
+-- Trigger: set_uuid_trigger
 
+CREATE TRIGGER set_uuid_trigger
+    BEFORE INSERT
+    ON public.shifts
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_uuid_field();
+	
+	
 -------------------------------------------------------------
 
 -- Table: public.arrivals
@@ -296,7 +359,7 @@ ALTER TABLE public.department_metadata
 
 -- FUNCTION: public.aggregated_arrivals(character varying, character varying, character varying, uuid)
 
-CREATE FUNCTION IF NOT EXISTS public.aggregated_arrivals(
+CREATE OR REPLACE FUNCTION public.aggregated_arrivals(
 	_start_date character varying,
 	_end_date character varying,
 	_door_to_prov character varying,
