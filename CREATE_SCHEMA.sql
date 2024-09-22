@@ -353,8 +353,8 @@ ALTER TABLE public.department_metadata
     OWNER TO robertpatton;
 
 
-
-
+-------------------------------------------------------------
+--- FUNCTIONS
 -------------------------------------------------------------
 
 -- FUNCTION: public.aggregated_arrivals(character varying, character varying, character varying, uuid)
@@ -423,12 +423,260 @@ ALTER FUNCTION public.aggregated_arrivals(character varying, character varying, 
     OWNER TO robertpatton;
 
 
+-------------------------------------------------------------
+--- FUNCTIONS TO CREATE DEMO TEST DATA
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+-- FUNCTION: public.generate_test_departments()
+
+-- DROP FUNCTION IF EXISTS public.generate_test_departments();
+
+CREATE OR REPLACE FUNCTION public.generate_test_departments(
+	)
+    RETURNS TABLE(client_name character varying, cg_id uuid, facility_name character varying, f_id uuid, department_name character varying, d_id uuid) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+
+BEGIN
+
+INSERT INTO client_groups (client_group_name) 
+SELECT 'A1 Emergency Physicians' 
+	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'A1 Emergency Physicians')
+UNION
+SELECT 'Best Emergency Physicians' 
+	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'Best Emergency Physicians')
+UNION
+SELECT 'Valley Emergency Physicians' 
+	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'Valley Emergency Physicians');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'Memorial Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'A1 Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'A1 Emergency Physicians' 
+	AND f.facility_name = 'Memorial Hospital');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'Regional Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'A1 Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'A1 Emergency Physicians' 
+	AND f.facility_name = 'Regional Hospital');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'Plains Memorial Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'Plains Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'Plains Emergency Physicians' 
+	AND f.facility_name = 'Plains Memorial Hospital');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'Plains Regional Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'Plains Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'Plains Emergency Physicians' 
+	AND f.facility_name = 'Plains Regional Hospital');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'Upper Valley Memorial Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'Valley Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'Valley Emergency Physicians' 
+	AND f.facility_name = 'Upper Valley Memorial Hospital');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'MidVale Regional Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'Valley Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'Valley Emergency Physicians' 
+	AND f.facility_name = 'MidVale Regional Hospital');
+
+INSERT INTO facilities (facility_name, client_group_id)
+select 'Lower Valley Memorial Hospital' as facility_name, z.id as client_group_id
+from client_groups as z where z.client_group_name = 'Valley Emergency Physicians'
+AND NOT EXISTS (
+	SELECT NULL FROM client_groups AS cg
+	INNER JOIN facilities as f on f.client_group_id = cg.id
+	WHERE cg.client_group_name = 'Valley Emergency Physicians' 
+	AND f.facility_name = 'Lower Valley Memorial Hospital');
+
+INSERT INTO departments (department_name, facility_id)
+select 'Main ED' as department_name, f.id as facility_id
+from facilities as f
+WHERE NOT EXISTS (
+	SELECT NULL FROM departments WHERE department_name = 'Main ED' AND facility_id = f.id
+);
+
+INSERT INTO departments (department_name, facility_id)
+select 'Fast Track' as department_name, f.id as facility_id
+from facilities as f
+WHERE NOT EXISTS (
+	SELECT NULL FROM departments WHERE department_name = 'Fast Track' AND facility_id = f.id
+);
+
+select cg.client_name, cg.id as cg_id, f.facility_name, f.id AS f_id, d.department_name, d.id as d_id
+from departments as d
+inner join facilities as f on d.facility_id = f.id
+inner join client_groups as cg on f.client_group_id = cg.id;
+
+END;
+
+$BODY$;
+
+ALTER FUNCTION public.generate_test_departments()
+    OWNER TO robertpatton;
+
+
+-------------------------------------------------------------
+-- FUNCTION: public.generate_test_data(uuid, real, boolean)
+
+-- DROP FUNCTION IF EXISTS public.generate_test_data(uuid, real, boolean);
+
+CREATE OR REPLACE FUNCTION public.generate_test_data(
+	department_id uuid,
+	scaling_factor real,
+	is_main boolean)
+    RETURNS void
+    LANGUAGE 'plpython3u'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+from datetime import datetime
+import math
+import random
+
+def random_cpt(is_main):
+    r = random.random()
+    if is_main:
+        if r < 0.05:
+            return "99282"
+        elif r < 0.3:
+            return "99283"
+        elif r < 0.75:
+            return "99284"
+        elif r < 0.92:
+            return "99285"
+        else:
+            return "99291"
+    else:
+        if r < 0.15:
+            return "99282"
+        elif r < 0.75:
+            return "99283"
+        else:
+            return "99284"
+		
+
+def random_dow():
+    r = random.random()
+    if r < 0.16:
+        return 1
+    elif r < 0.315:
+        return 2
+    elif r < 0.46:
+        return 3
+    elif r < 0.605:
+        return 4
+    elif r < 0.75:
+        return 5
+    elif r < 0.875:
+        return 6
+
+    return 0
+
+def random_rvus(cpt):
+    r = random.random()
+    if cpt == "99282":
+        return 1.0 + 1.0 * r
+    elif cpt == "99282":
+        return 1.4 + 1.5 * r
+    elif cpt == "99282":
+        return 2.6 + 2.5 * r
+    elif cpt == "99282":
+        return 3.8 + 3.5 * r
+
+    return 4.5 + 4 * r
+
+def interpolate_arrivals_curve(minute_of_day, factor):
+    values = [6, 3.5, 3.5, 2.5, 3, 4, 6, 8, 9, 12, 17, 21, 23, 24, 23, 21, 22, 21.5, 23, 22, 19, 13, 11, 7, 6]
+    hod = math.floor(minute_of_day / 60.0)
+    portion_of_hour = (minute_of_day % 60) / 60.0
+    return math.floor(factor * 5.0 * (values[hod] * (1 - portion_of_hour) + values[hod + 1] * portion_of_hour))
+
+for i in range(0, 1440):
+	arrivals_to_generate = interpolate_arrivals_curve(i, scaling_factor)
+	for j in range(0, arrivals_to_generate):
+		cpt = random_cpt(is_main)
+		rvus = random_rvus(cpt)
+		wk = math.floor(random.random() * 54.0)
+		dow = random_dow()
+		inst = 1640476800 + 604800 * wk + 86400 * dow + i * 60
+		dtm = datetime.utcfromtimestamp(inst)
+		plpy.execute(f"INSERT INTO arrivals (arrival_datetime, rvus, cpt, age, department_id) VALUES ('{dtm}', '{rvus}', '{cpt}', 0, '{department_id}')")
+
+$BODY$;
+
+ALTER FUNCTION public.generate_test_data(uuid, real, boolean)
+    OWNER TO robertpatton;
+
+
+-------------------------------------------------------------
+-- FUNCTION: public.generate_all_test_data()
+
+-- DROP FUNCTION IF EXISTS public.generate_all_test_data();
+
+CREATE OR REPLACE FUNCTION public.generate_all_test_data(
+	)
+    RETURNS void
+    LANGUAGE 'plpython3u'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+AS $BODY$
+import random
+
+plpy.execute("SELECT generate_test_departments()")
+
+rv_mains = plpy.execute("SELECT id FROM departments WHERE department_name = 'Main ED' AND id NOT IN (SELECT DISTINCT department_id FROM arrivals)")
+
+for i in range(0, len(rv_mains)):
+	department_id = rv_mains[i]["id"]
+	factor = 0.5 + random.random()
+	is_main = True
+	plpy.execute(f"SELECT generate_test_data('{department_id}', {factor}, {is_main})")
+
+rv_else = plpy.execute("SELECT id FROM departments WHERE department_name != 'Main ED' AND id NOT IN (SELECT DISTINCT department_id FROM arrivals)")
+
+for i in range(0, len(rv_else)):
+	department_id = rv_else[i]["id"]
+	factor = 0.2 + random.random() * 0.3
+	is_main = False
+	plpy.execute(f"SELECT generate_test_data('{department_id}', {factor}, {is_main})")
+
+$BODY$;
+
+ALTER FUNCTION public.generate_all_test_data()
+    OWNER TO robertpatton;
+
 
 -------------------------------------------------------------
 
 
-
-
--------------------------------------------------------------
 
 
