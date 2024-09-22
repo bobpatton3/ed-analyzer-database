@@ -13,7 +13,7 @@ import random
 
 plpy.execute("SELECT generate_test_departments()")
 
-rv_mains = plpy.execute("SELECT id FROM departments WHERE department_name = 'Main ED' AND id NOT IN (SELECT DISTINCT department_id FROM arrivals)")
+rv_mains = plpy.execute("SELECT d.id FROM departments AS d WHERE d.department_name = 'Main ED' AND d.id NOT IN (SELECT DISTINCT ar.department_id FROM arrivals AS ar)")
 
 for i in range(0, len(rv_mains)):
 	department_id = rv_mains[i]["id"]
@@ -21,7 +21,7 @@ for i in range(0, len(rv_mains)):
 	is_main = True
 	plpy.execute(f"SELECT generate_test_data('{department_id}', {factor}, {is_main})")
 
-rv_else = plpy.execute("SELECT id FROM departments WHERE department_name != 'Main ED' AND id NOT IN (SELECT DISTINCT department_id FROM arrivals)")
+rv_else = plpy.execute("SELECT d.id FROM departments AS d WHERE d.department_name != 'Main ED' AND d.id NOT IN (SELECT DISTINCT ar.department_id FROM arrivals AS ar)")
 
 for i in range(0, len(rv_else)):
 	department_id = rv_else[i]["id"]

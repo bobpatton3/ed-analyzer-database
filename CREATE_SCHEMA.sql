@@ -434,11 +434,10 @@ ALTER FUNCTION public.aggregated_arrivals(character varying, character varying, 
 
 CREATE OR REPLACE FUNCTION public.generate_test_departments(
 	)
-    RETURNS TABLE(client_name character varying, cg_id uuid, facility_name character varying, f_id uuid, department_name character varying, d_id uuid) 
+    RETURNS void 
     LANGUAGE 'plpgsql'
     COST 100
     VOLATILE PARALLEL UNSAFE
-    ROWS 1000
 
 AS $BODY$
 
@@ -448,8 +447,8 @@ INSERT INTO client_groups (client_group_name)
 SELECT 'A1 Emergency Physicians' 
 	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'A1 Emergency Physicians')
 UNION
-SELECT 'Best Emergency Physicians' 
-	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'Best Emergency Physicians')
+SELECT 'Plains Emergency Physicians' 
+	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'Plains Emergency Physicians')
 UNION
 SELECT 'Valley Emergency Physicians' 
 	WHERE NOT EXISTS (SELECT NULL FROM client_groups WHERE client_group_name = 'Valley Emergency Physicians');
@@ -521,20 +520,15 @@ INSERT INTO departments (department_name, facility_id)
 select 'Main ED' as department_name, f.id as facility_id
 from facilities as f
 WHERE NOT EXISTS (
-	SELECT NULL FROM departments WHERE department_name = 'Main ED' AND facility_id = f.id
+	SELECT NULL FROM departments AS d WHERE d.department_name = 'Main ED' AND d.facility_id = f.id
 );
 
 INSERT INTO departments (department_name, facility_id)
 select 'Fast Track' as department_name, f.id as facility_id
 from facilities as f
 WHERE NOT EXISTS (
-	SELECT NULL FROM departments WHERE department_name = 'Fast Track' AND facility_id = f.id
+	SELECT NULL FROM departments AS d WHERE d.department_name = 'Fast Track' AND d.facility_id = f.id
 );
-
-select cg.client_name, cg.id as cg_id, f.facility_name, f.id AS f_id, d.department_name, d.id as d_id
-from departments as d
-inner join facilities as f on d.facility_id = f.id
-inner join client_groups as cg on f.client_group_id = cg.id;
 
 END;
 
@@ -653,7 +647,7 @@ import random
 
 plpy.execute("SELECT generate_test_departments()")
 
-rv_mains = plpy.execute("SELECT id FROM departments WHERE department_name = 'Main ED' AND id NOT IN (SELECT DISTINCT department_id FROM arrivals)")
+rv_mains = plpy.execute("SELECT d.id FROM departments AS d WHERE d.department_name = 'Main ED' AND d.id NOT IN (SELECT DISTINCT ar.department_id FROM arrivals AS ar)")
 
 for i in range(0, len(rv_mains)):
 	department_id = rv_mains[i]["id"]
@@ -661,7 +655,7 @@ for i in range(0, len(rv_mains)):
 	is_main = True
 	plpy.execute(f"SELECT generate_test_data('{department_id}', {factor}, {is_main})")
 
-rv_else = plpy.execute("SELECT id FROM departments WHERE department_name != 'Main ED' AND id NOT IN (SELECT DISTINCT department_id FROM arrivals)")
+rv_else = plpy.execute("SELECT d.id FROM departments AS d WHERE d.department_name != 'Main ED' AND d.id NOT IN (SELECT DISTINCT ar.department_id FROM arrivals AS ar)")
 
 for i in range(0, len(rv_else)):
 	department_id = rv_else[i]["id"]
@@ -676,7 +670,4 @@ ALTER FUNCTION public.generate_all_test_data()
 
 
 -------------------------------------------------------------
-
-
-
 
