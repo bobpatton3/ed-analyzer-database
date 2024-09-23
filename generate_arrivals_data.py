@@ -1,3 +1,5 @@
+# Will need to: pip3 install psycopg2-binary
+
 from datetime import datetime
 import math
 import random
