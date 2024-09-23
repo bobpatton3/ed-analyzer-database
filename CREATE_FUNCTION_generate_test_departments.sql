@@ -4,11 +4,10 @@
 
 CREATE OR REPLACE FUNCTION public.generate_test_departments(
 	)
-    RETURNS void 
+    RETURNS void
     LANGUAGE 'plpgsql'
     COST 100
     VOLATILE PARALLEL UNSAFE
-
 AS $BODY$
 
 BEGIN
@@ -100,6 +99,33 @@ WHERE NOT EXISTS (
 	SELECT NULL FROM departments AS d WHERE d.department_name = 'Fast Track' AND d.facility_id = f.id
 );
 
+INSERT INTO users (username) 
+SELECT 'max_patton@yahoo.com'
+WHERE NOT EXISTS (
+	SELECT NULL FROM users AS u WHERE u.username = 'max_patton@yahoo.com'
+);
+
+INSERT INTO user_department_auth (user_id, department_id, status) 
+SELECT u.id, d.id, 'ACTIVE'
+FROM users as u
+CROSS JOIN departments as d 
+WHERE NOT EXISTS (
+	SELECT NULL FROM user_department_auth AS uda WHERE uda.user_id = u.id AND uda.department_id = d.id
+);
+
+INSERT INTO department_configuration (provider_type, hourly_cost, peak_capacity, department_id)
+SELECT 'PHYS', 200.0, 12.5, d.id
+FROM departments AS d
+WHERE NOT EXISTS (
+	SELECT NULL FROM department_configuration AS dc WHERE dc.provider_type = 'PHYS' AND dc.department_id = d.id
+);
+
+INSERT INTO department_configuration (provider_type, hourly_cost, peak_capacity, department_id)
+SELECT 'APP', 80.0, 8.0, d.id
+FROM departments AS d
+WHERE NOT EXISTS (
+	SELECT NULL FROM department_configuration AS dc WHERE dc.provider_type = 'APP' AND dc.department_id = d.id
+);
 
 END;
 
